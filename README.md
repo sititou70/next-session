@@ -231,6 +231,17 @@ await session.commit();
 // always calling res.end or res.writeHead after the above
 ```
 
+### session.regenerate()
+
+Replace the current session ID with a new generated one. Return Promise.
+
+You **must** call `session.commit` if `autoCommit` is set to `false`.
+
+```javascript
+await session.regenerate();
+await session.commit(); // if `autoCommit` is set to `false`.
+```
+
 ### session.id
 
 The unique id that associates to the current session.

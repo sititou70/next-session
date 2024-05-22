@@ -168,6 +168,64 @@ describe("session()", () => {
     );
     expect(store.get).toHaveBeenCalledWith(id);
   });
+  test("should regenerate session, destroy old sid, set new sid and set cookie", async () => {
+    const store = new MemoryStore();
+    store.destroy = jest.fn();
+    store.set = jest.fn(() => Promise.resolve());
+    const oldSid = "foo";
+    const newSid = "bar";
+    await store.store.set(
+      oldSid,
+      JSON.stringify({ foo: "bar", cookie: defaultCookie })
+    );
+    const res = await inject(
+      async (req, res) => {
+        await session({ store, genid: () => newSid })(req, res);
+        req.session.foo = "quz";
+        await req.session.regenerate();
+        res.end();
+      },
+      { path: "/", headers: { cookie: `sid=${oldSid}` } }
+    );
+    expect(store.destroy).toHaveBeenCalledWith(oldSid);
+    expect(store.set).toHaveBeenCalledWith(newSid, {
+      foo: "quz",
+      cookie: defaultCookie,
+      [isTouched]: true,
+    });
+    expect(res.headers["set-cookie"]).toBe(`sid=${newSid}; Path=/; HttpOnly`);
+  });
+  test("should regenerate session, destroy old sid, set new sid and set cookie (autoCommit=false)", async () => {
+    const store = new MemoryStore();
+    store.destroy = jest.fn();
+    store.set = jest.fn(() => Promise.resolve());
+    const oldSid = "foo";
+    const newSid = "bar";
+    await store.store.set(
+      oldSid,
+      JSON.stringify({ foo: "bar", cookie: defaultCookie })
+    );
+    const res = await inject(
+      async (req, res) => {
+        await session({ store, autoCommit: false, genid: () => newSid })(
+          req,
+          res
+        );
+        req.session.foo = "quz";
+        await req.session.regenerate();
+        await req.session.commit();
+        res.end();
+      },
+      { path: "/", headers: { cookie: `sid=${oldSid}` } }
+    );
+    expect(store.destroy).toHaveBeenCalledWith(oldSid);
+    expect(store.set).toHaveBeenCalledWith(newSid, {
+      foo: "quz",
+      cookie: defaultCookie,
+      [isTouched]: true,
+    });
+    expect(res.headers["set-cookie"]).toBe(`sid=${newSid}; Path=/; HttpOnly`);
+  });
   test("should destroy session and unset cookie", async () => {
     const store = new MemoryStore();
     store.destroy = jest.fn();

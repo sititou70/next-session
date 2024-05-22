@@ -25,6 +25,8 @@ export default function session<T extends SessionRecord = SessionRecord>(options
     id: string,
     _now: number
   ) {
+    let privateId = id;
+
     Object.defineProperties(session, {
       commit: {
         value: async function commit(this: TypedSession) {
@@ -38,6 +40,13 @@ export default function session<T extends SessionRecord = SessionRecord>(options
           this[isTouched] = true;
         },
       },
+      regenerate: {
+        value: async function regenerate(this: TypedSession) {
+          await store.destroy(this.id);
+          privateId = genId();
+          this[isTouched] = true;
+        },
+      },
       destroy: {
         value: async function destroy(this: TypedSession) {
           this[isDestroyed] = true;
@@ -47,7 +56,7 @@ export default function session<T extends SessionRecord = SessionRecord>(options
           delete req.session;
         },
       },
-      id: { value: id },
+      id: { get: () => privateId },
     });
   }
 
