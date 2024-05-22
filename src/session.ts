@@ -2,7 +2,7 @@ import c from "cookie";
 import { IncomingMessage, ServerResponse } from "http";
 import { nanoid } from "nanoid";
 import MemoryStore from "./memory-store";
-import { isDestroyed, isNew, isTouched } from "./symbol";
+import { isDestroyed, isNew, isRegenerated, isTouched } from "./symbol";
 import { Options, Session, SessionRecord } from "./types";
 import { commitHeader, hash } from "./utils";
 
@@ -44,7 +44,7 @@ export default function session<T extends SessionRecord = SessionRecord>(options
         value: async function regenerate(this: TypedSession) {
           await store.destroy(this.id);
           privateId = genId();
-          this[isTouched] = true;
+          this[isRegenerated] = true;
         },
       },
       destroy: {
@@ -139,6 +139,7 @@ export default function session<T extends SessionRecord = SessionRecord>(options
         if (
           (session[isNew] && Object.keys(session).length > 1) ||
           session[isTouched] ||
+          session[isRegenerated] ||
           session[isDestroyed]
         ) {
           commitHeader(res, name, session, encode);

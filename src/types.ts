@@ -1,4 +1,4 @@
-import { isDestroyed, isNew, isTouched } from "./symbol";
+import type { isDestroyed, isNew, isRegenerated, isTouched } from "./symbol";
 
 export type SessionRecord = Record<string, any>
 
@@ -10,9 +10,11 @@ export type Session<T extends SessionRecord = SessionRecord> = {
   id: string;
   touch(): void;
   commit(): Promise<void>;
+  regenerate(): Promise<void>;
   destroy(): Promise<void>;
   [isNew]?: boolean;
   [isTouched]?: boolean;
+  [isRegenerated]?: boolean;
   [isDestroyed]?: boolean;
 } & SessionData<T>
 

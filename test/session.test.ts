@@ -4,7 +4,7 @@ import { createServer, IncomingMessage, request, ServerResponse } from "http";
 import { inject } from "light-my-request";
 import MemoryStore from "../src/memory-store";
 import session from "../src/session";
-import { isNew, isTouched } from "../src/symbol";
+import { isNew, isRegenerated, isTouched } from "../src/symbol";
 import { Session } from "../src/types";
 
 const defaultCookie = {
@@ -191,7 +191,7 @@ describe("session()", () => {
     expect(store.set).toHaveBeenCalledWith(newSid, {
       foo: "quz",
       cookie: defaultCookie,
-      [isTouched]: true,
+      [isRegenerated]: true,
     });
     expect(res.headers["set-cookie"]).toBe(`sid=${newSid}; Path=/; HttpOnly`);
   });
@@ -222,7 +222,7 @@ describe("session()", () => {
     expect(store.set).toHaveBeenCalledWith(newSid, {
       foo: "quz",
       cookie: defaultCookie,
-      [isTouched]: true,
+      [isRegenerated]: true,
     });
     expect(res.headers["set-cookie"]).toBe(`sid=${newSid}; Path=/; HttpOnly`);
   });
